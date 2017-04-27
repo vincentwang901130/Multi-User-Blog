@@ -1,0 +1,56 @@
+{% extends "base.html" %} {% block content %}
+<script>
+  function del() {
+    var msg = "You sure to delete this post? \n";
+    if (confirm(msg) == true) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+</script>
+<div class="row">
+  <div class="col-md-7">
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+      {{error}}
+    </div>
+    {% endif %}
+  </div>
+  <div class="col-md-5">
+    <a class="btn pull-right" href="/blog/deletepost/{{post.key().id()}}" onclick="javascript:return del()">Delete</a>
+    <a class="btn pull-right" href="/blog/editpost/{{post.key().id()}}">Edit</a>
+  </div>
+  {{post.render() | safe}}
+</div>
+
+<div class="row">
+  <div class="sub-work col-md-12">
+    <form method="post" role="form">
+      <input type="hidden" class="form-control" id="like" name="like" value="update">
+      <button type="submit" class="btn">Like {{noOfLikes}}</button>
+    </form>
+  </div>
+
+  <div class="sub-work col-md-12">
+    <form method="post" role="form" class="comment-form">
+      <div class="form-group">
+        <label for="comment">Comment:</label>
+        <input type="text" class="form-control" id="comment" name="comment" value="">
+      </div>
+      <button type="submit" class="btn">Submit</button>
+    </form>
+  </div>
+
+  <div class="sub-work col-md-12">
+    {% for cmt in comments %}
+    <blockquote>
+      <a class="btn pull-right" href="/blog/deletecomment/{{post.key().id()}}/{{cmt.key().id()}}">Delete</a>
+      <a class="btn pull-right" href="/blog/editcomment/{{post.key().id()}}/{{cmt.key().id()}}">Edit</a>
+      <p>{{ cmt.comment }}</p>
+      <footer>{{ cmt.getUserName() }}</footer>
+    </blockquote>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
