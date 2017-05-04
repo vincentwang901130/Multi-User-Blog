@@ -1,3 +1,35 @@
 .container {
-    font-family: "VT323", sans-serif;
+  font-family: "VT323", sans-serif;
+}
+
+.welcomebanner {
+  text-align: left
+}
+
+.welcomebanner h1 {
+  font-size: 50px;
+}
+
+.userbar {
+  text-align: right;
+}
+
+.userbar a {
+  font-size: 25px;
+}
+
+.post-title {
+  font-size: 30px;
+}
+
+.post-content {
+  font-size: 20px;
+}
+
+.opt a {
+  font-size: 20px;
+}
+
+.commentopt a {
+  font-size: 18px;
 }

@@ -255,7 +255,6 @@ class PostPage(BlogHandler):
             return
 
         error = self.request.get('error')
-
         self.render("permalink.html", post=post, noOfLikes=likes.count(),
                     comments=comments, error=error)
 
@@ -301,7 +300,6 @@ class PostPage(BlogHandler):
 
         comments = db.GqlQuery("select * from Comment where post_id = " +
                                post_id + "order by created desc")
-
         likes = db.GqlQuery("select * from Like where post_id=" + post_id)
         # render the page
         self.render("permalink.html", post=post,
@@ -422,8 +420,7 @@ class DeleteComment(BlogHandler):
             cmt = db.get(key)
             if cmt.user_id == self.user.key().id():
                 cmt.delete()
-                self.redirect("/blog/" + post_id + "?deleted_comment_id=" +
-                              comment_id)
+                self.redirect("/blog/" + post_id)
             else:
                 self.redirect(
                     "/blog/" + post_id + "?error=You need to be "
@@ -501,7 +498,7 @@ class Login(BlogHandler):
         if msg[0] == 0:
             user = msg[1]
             self.login(user)
-            self.redirect('/')
+            self.redirect('/?')
         elif msg[0] == 1:
             errormsg = msg[1]
             self.render('login.html', error=errormsg)

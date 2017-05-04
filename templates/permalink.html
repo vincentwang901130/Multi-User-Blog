@@ -9,48 +9,55 @@
     }
   }
 </script>
-<div class="row">
-  <div class="col-md-7">
-    {% if error %}
-    <div class="alert alert-danger" role="alert">
-      {{error}}
-    </div>
-    {% endif %}
-  </div>
-  <div class="col-md-5">
-    <a class="btn pull-right" href="/blog/deletepost/{{post.key().id()}}" onclick="javascript:return del()">Delete</a>
-    <a class="btn pull-right" href="/blog/editpost/{{post.key().id()}}">Edit</a>
-  </div>
-  {{post.render() | safe}}
-</div>
-
-<div class="row">
-  <div class="sub-work col-md-12">
-    <form method="post" role="form">
-      <input type="hidden" class="form-control" id="like" name="like" value="update">
-      <button type="submit" class="btn">Like {{noOfLikes}}</button>
-    </form>
-  </div>
-
-  <div class="sub-work col-md-12">
-    <form method="post" role="form" class="comment-form">
-      <div class="form-group">
-        <label for="comment">Comment:</label>
-        <input type="text" class="form-control" id="comment" name="comment" value="">
+<div class="singlepost">
+  <div class="row">
+    <div class="col-md-6">
+      {% if error %}
+      <div class="alert alert-danger" role="alert">
+        {{error}}
       </div>
-      <button type="submit" class="btn">Submit</button>
-    </form>
+      {% endif %}
+    </div>
+    <div class="opt col-md-6">
+      <a class="btn pull-right" href="/blog/deletepost/{{post.key().id()}}" onclick="javascript:return del()">Delete</a>
+      <a class="btn pull-right" href="/blog/editpost/{{post.key().id()}}">Edit</a>
+    </div>
+    {{post.render() | safe}}
   </div>
 
-  <div class="sub-work col-md-12">
-    {% for cmt in comments %}
-    <blockquote>
-      <a class="btn pull-right" href="/blog/deletecomment/{{post.key().id()}}/{{cmt.key().id()}}">Delete</a>
-      <a class="btn pull-right" href="/blog/editcomment/{{post.key().id()}}/{{cmt.key().id()}}">Edit</a>
-      <p>{{ cmt.comment }}</p>
-      <footer>{{ cmt.getUserName() }}</footer>
-    </blockquote>
-    {% endfor %}
+  <div class="row">
+    <div class="sub-work col-md-12">
+      <form method="post" role="form">
+        <input type="hidden" class="form-control" id="like" name="like" value="update">
+        <button type="submit" class="functionbtn btn">Like {{noOfLikes}}</button>
+      </form>
+    </div>
+
+    <div class="sub-work col-md-12">
+      <form method="post" role="form" class="comment-form">
+        <div class="form-group">
+          <label for="comment">Comment:</label>
+          <textarea type="text" class="form-control" id="comment" name="comment" value="" rows="2"></textarea>
+        </div>
+        <button type="submit" class="btn">Submit</button>
+      </form>
+      <br>
+    </div>
+
+    <div class="sub-work col-md-12">
+      {% for cmt in comments %}
+      <blockquote>
+        {% if user.name == cmt.getUserName() %}
+          <div class="commentopt">
+            <a class="btn pull-right" href="/blog/deletecomment/{{post.key().id()}}/{{cmt.key().id()}}">Delete</a>
+            <a class="btn pull-right" href="/blog/editcomment/{{post.key().id()}}/{{cmt.key().id()}}">Edit</a>
+          </div>
+        {% endif %}
+        <p>{{cmt.comment}}</p>
+        <footer>{{ cmt.getUserName() }}</footer>
+      </blockquote>
+      {% endfor %}
+    </div>
   </div>
 </div>
 {% endblock %}

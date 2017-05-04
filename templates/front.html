@@ -1,14 +1,22 @@
 {% extends "base.html" %}{% block content %}
 <script>
-  setTimeout(function() {
-    window.location.href = "/"
-  }, 500);
+var timeleft = 3;
+var Timer = setInterval(
+  function(){
+   timeleft--;
+   document.getElementById("countdowntimer").textContent = timeleft;
+   if(timeleft <= 0)
+      clearInterval(Timer);
+    if(timeleft == 0)
+      window.location.href = "/";
+    },1000);
+
 </script>
 <div class="row">
   <div class="sub-work col-md-12">
     {% if deleted_post_id %}
     <div class="alert alert-success" role="alert">
-      Post deleted successully!
+      Post deleted successully! Redirect to <a href="/?">home</a> in <b id="countdowntimer">3</b> seconds
     </div>
     {% endif %}
   </div>

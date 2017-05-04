@@ -7,7 +7,7 @@
 
       <div class="form-group">
         <label for="subject">Comment:</label>
-        <input type="text" class="form-control" id="comment" name="comment" value="{{comment}}">
+        <textarea type="text" class="form-control" name="comment" value="{{comment}}" rows="5">{{comment}}</textarea>
       </div>
 
       {% if error %}
@@ -16,7 +16,7 @@
       </div>
       {% endif %}
 
-      <button type="submit" class="btn ">Submit</button>
+      <button type="submit" class="btn">Submit</button>
     </form>
   </div>
 </div>
