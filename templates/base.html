@@ -5,10 +5,20 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css" media="screen">
     <link rel="stylesheet" href="/static/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css?family=VT323" rel="stylesheet">
     <title>My Blog</title>
+    <script>
+      function logout() {
+        var msg = "You sure to logout ? \n";
+        if (confirm(msg) == true) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    </script>
   </head>
 
   <body>
@@ -25,18 +35,30 @@
         </div>
         <div class="userbar col-md-5 col col-sm-6 col-xs-12">
           {% if user and path != '/blog/newpost'%}
-          <a class="btn" href="/blog/newpost">New Post</a> <a class="btn" href="/logout">Logout</a>
+          <p>
+            <a class="btn" href="/blog/newpost">New Post</a>
+            <a class="btn" href="/logout" onclick="javascript:return logout()">Logout</a>
+          </p>
           {% elif user and path == '/blog/newpost' %}
-          <a class="btn" href="/logout">Logout</a>
-          <h2>New Post</h2>{% elif not user and path != '/login' and path !='/register'%}
+          <p>
+            <a class="btn" href="/logout" onclick="javascript:return logout()">Logout</a>
+            <h2>New Post</h2>
+          </p>
+          {% elif not user and path != '/login' and path !='/register'%}
           <p>
             <a class="btn" href="/login">Login</a>
             <a class="btn" href="/register">Register</a>
           </p>
           {% elif not user and path == '/login'%}
-          <h2>Login</h2><a class="btn" href="/register">Register</a>
+          <p>
+            <h2>Login</h2>
+            <a class="btn" href="/register">Register</a>
+          </p>
           {% elif not user and path == '/register'%}
-          <h2>Register</h2> <a class="btn" href="/login">Login</a>{% endif %}
+          <p>
+            <h2>Register</h2>
+            <a class="btn" href="/login">Login</a>
+          </p>{% endif %}
         </div>
       </header>
       <section class="postblock">

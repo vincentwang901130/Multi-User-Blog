@@ -1,29 +1,30 @@
 {% extends "base.html" %}{% block content %}
 <script>
-    var timeleft = 3;
-    var Timer = setInterval(
-        function() {
-            timeleft--;
-            if (document.getElementById("countdowntimer")) {
-                document.getElementById("countdowntimer").textContent = timeleft;
-            }
-            if (timeleft <= 0)
-                clearInterval(Timer);
-            if (timeleft == 0)
-                window.location.href = "/";
-        }, 1000);
+  var seconds = 3;
+
+  function redirect() {
+    if (seconds <= 0) {
+      window.location = "/";
+    } else {
+      seconds--;
+      document.getElementById("alert").innerHTML = "Post delete success, redirect after " + seconds + " seconds."
+      setTimeout("redirect()", 1000)
+    }
+  }
 </script>
 <div class="row">
-    <div class="sub-work col-md-12">
-        {% if deleted_post_id %}
-        <div class="alert alert-success" role="alert">
-            Post deleted successully! Redirect to <a href="/?">home</a> in <b id="countdowntimer">3</b> seconds
-        </div>
-        {% endif %}
+  <div class="sub-work col-md-12">
+    {% if deleted_post_id %}
+    <div class="alert alert-success" id="alert" role="alert">
+      <script>
+        redirect();
+      </script>
     </div>
+    {% endif %}
+  </div>
 </div>
 {% for p in posts %} {% if p.key().id()|string != deleted_post_id|string %}
 <div class="row">
-    {{ p.render() | safe }}
+  {{ p.render() | safe }}
 </div>
 {% endif %} {% endfor %} {% endblock %}
