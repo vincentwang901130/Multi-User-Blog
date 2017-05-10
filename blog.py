@@ -1,58 +1,11 @@
 import hashlib
-import hmac
 import os
 import random
-import re
 from string import letters
 
-import jinja2
+import helper
 import webapp2
 from google.appengine.ext import db
-
-template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
-                               autoescape=True)
-secret = "OhCanada"
-
-# *********
-# --tools--
-# *********
-
-
-def render_str(template, **params):
-    t = jinja_env.get_template(template)
-    return t.render(params)
-
-
-def make_secure_val(val):
-    return '%s|%s' % (val, hmac.new(secret, val).hexdigest())
-
-
-def check_secure_val(secure_val):
-    val = secure_val.split('|')[0]
-    if secure_val == make_secure_val(val):
-        return val
-
-
-USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
-
-
-def valid_username(username):
-    return username and USER_RE.match(username)
-
-
-PWD_RE = re.compile(r"^.{3,20}$")
-
-
-def valid_password(password):
-    return password and PWD_RE.match(password)
-
-
-EMAIL_RE = re.compile(r'^[\S]+@[\S]+\.[\S]+$')
-
-
-def valid_email(email):
-    return not email or EMAIL_RE.match(email)
 
 
 # **********
@@ -65,6 +18,7 @@ class Post(db.Model):
     subject = db.StringProperty(required=True)
     content = db.TextProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
+    likes = db.IntegerProperty(default=0)
     last_modified = db.DateTimeProperty(auto_now=True)
 
     def getUserName(self):
@@ -80,7 +34,8 @@ class Post(db.Model):
             timestamp = "Created on " + creattime + " by " + self.getUserName()
         else:
             timestamp = "Edited on " + edittime + " by " + self.getUserName()
-        return render_str("post.html", p=self, timestamp=timestamp)
+        return helper.jinja_render_str("post.html",
+                                       p=self, timestamp=timestamp)
 
     @classmethod
     def deletecomment(cls, post_id):
@@ -90,6 +45,13 @@ class Post(db.Model):
             for cmt in comments:
                 cmt.delete()
 
+    @classmethod
+    def deletelike(cls, post_id):
+        likes = db.GqlQuery("select * from Like where post_id = " + post_id)
+        if likes:
+            for like in likes:
+                like.delete()
+
 
 class Like(db.Model):
     user_id = db.IntegerProperty(required=True)
@@ -98,14 +60,6 @@ class Like(db.Model):
     def getUserName(self):
         user = User.by_id(self.user_id)
         return user.name
-
-    # @classmethod
-    # def remove(cls, post_id, user_id):
-    #     likes = db.GqlQuery("select * from Like where post_id = " +
-    #                         post_id + "and user_id=" + user_id)
-    #     if likes:
-    #         for like in likes:
-    #             like.delete()
 
 
 class Comment(db.Model):
@@ -172,7 +126,7 @@ class User(db.Model):
         msg = None
         username = ""
         user = None
-        if valid_email(entry):
+        if helper.valid_email(entry):
             user = cls.by_email(entry)
             if user:
                 username = user.name
@@ -206,20 +160,20 @@ class BlogHandler(webapp2.RequestHandler):
     def render_str(self, template, **params):
         params['user'] = self.user
         params['path'] = self.path
-        return render_str(template, **params)
+        return helper.jinja_render_str(template, **params)
 
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
 
     def set_secure_cookie(self, name, val):
-        cookie_val = make_secure_val(val)
+        cookie_val = helper.make_secure_val(val)
         self.response.headers.add_header(
             'Set-Cookie',
             '%s=%s; Path=/' % (name, cookie_val))
 
     def read_secure_cookie(self, name):
         cookie_val = self.request.cookies.get(name)
-        return cookie_val and check_secure_val(cookie_val)
+        return cookie_val and helper.check_secure_val(cookie_val)
 
     def login(self, user):
         self.set_secure_cookie('user_id', str(user.key().id()))
@@ -303,8 +257,7 @@ class PostPage(BlogHandler):
         likes = db.GqlQuery("select * from Like where post_id=" + post_id)
         # render the page
         self.render("permalink.html", post=post,
-                    comments=comments, noOfLikes=likes.count(),
-                    new=newcomment)
+                    comments=comments, noOfLikes=likes.count())
 
 
 class NewPost(BlogHandler):
@@ -313,10 +266,12 @@ class NewPost(BlogHandler):
             self.render("newpost.html")
         else:
             self.redirect("/login")
+            return
 
     def post(self):
         if not self.user:
             self.redirect('/blog')
+            return
 
         subject = self.request.get("subject")
         content = self.request.get("content")
@@ -325,6 +280,7 @@ class NewPost(BlogHandler):
                         subject=subject, content=content)
             post.put()
             self.redirect('/blog/' + str(post.key().id()))
+            return
         else:
             error = "Subject and content cannot be empty"
             self.render("newpost.html", subject=subject,
@@ -342,12 +298,15 @@ class EditPost(BlogHandler):
             else:
                 self.redirect("/blog/" + post_id + "?error=Only owner of " +
                               "this post can edit this post.")
+                return
         else:
             self.redirect("/login?error=Please login to edit")
+            return
 
     def post(self, post_id):
         if not self.user:
             self.redirect('/blog')
+            return
         subject = self.request.get('subject')
         content = self.request.get('content')
         if subject and content:
@@ -357,6 +316,7 @@ class EditPost(BlogHandler):
             post.content = content
             post.put()
             self.redirect('/blog/%s' % post_id)
+            return
         else:
             error = "Subject and content can not be empty!"
             self.render("editpost.html", subject=subject,
@@ -371,12 +331,16 @@ class DeletePost(BlogHandler):
             if post.user_id == self.user.key().id():
                 post.delete()
                 post.deletecomment(post_id)
+                post.deletelike(post_id)
                 self.redirect("/?deleted_post_id=" + post_id)
+                return
             else:
                 self.redirect("/blog/" + post_id +
                               "?error=Only owner of this post can delete.")
+                return
         else:
             self.redirect("/login?error=You need to login to edit this post")
+            return
 
 
 class EditComment(BlogHandler):
@@ -391,13 +355,16 @@ class EditComment(BlogHandler):
                 self.redirect(
                     "/blog/" + post_id + "?error=You need to "
                     "be the owner of this comment to edit.")
+                return
         else:
             self.redirect(
                 "/login?error=You need to login to edit your comment.")
+            return
 
     def post(self, post_id, comment_id):
         if not self.user:
             self.redirect('/blog')
+            return
         comment = self.request.get('comment')
         if comment:
             key = db.Key.from_path('Comment', int(
@@ -406,10 +373,12 @@ class EditComment(BlogHandler):
             cmt.comment = comment
             cmt.put()
             self.redirect("/blog/" + post_id)
+            return
         else:
             error = "comment cannot be empty"
             self.redirect("editpost.html", subject=subject, content=content,
                           error=error)
+            return
 
 
 class DeleteComment(BlogHandler):
@@ -421,13 +390,16 @@ class DeleteComment(BlogHandler):
             if cmt.user_id == self.user.key().id():
                 cmt.delete()
                 self.redirect("/blog/" + post_id)
+                return
             else:
                 self.redirect(
                     "/blog/" + post_id + "?error=You need to be "
                     "the owner of this comment to delete.")
+                return
         else:
-            slef.redirect("/login?error=You need to "
+            self.redirect("/login?error=You need to "
                           "login to delete this comment.")
+            return
 
 
 class Signup(BlogHandler):
@@ -444,18 +416,18 @@ class Signup(BlogHandler):
         params = dict(username=self.username,
                       email=self.email)
 
-        if not valid_username(self.username):
+        if not helper.valid_username(self.username):
             params['error_username'] = "The username is not valid."
             have_error = True
 
-        if not valid_password(self.password):
+        if not helper.valid_password(self.password):
             params['error_password'] = "The password is not valid."
             have_error = True
         elif self.password != self.verify:
             params['error_verify'] = "The passwords does not match."
             have_error = True
 
-        if not valid_email(self.email):
+        if not helper.valid_email(self.email):
             params['error_email'] = "The email address is not valid."
             have_error = True
 
@@ -482,6 +454,7 @@ class Register(Signup):
             usr.put()
             self.login(usr)
             self.redirect('/')
+            return
 
 
 class Login(BlogHandler):
@@ -499,6 +472,7 @@ class Login(BlogHandler):
             user = msg[1]
             self.login(user)
             self.redirect('/?')
+            return
         elif msg[0] == 1:
             errormsg = msg[1]
             self.render('login.html', error=errormsg)
@@ -508,6 +482,7 @@ class Logout(BlogHandler):
     def get(self):
         self.logout()
         self.redirect('/')
+        return
 
 
 app = webapp2.WSGIApplication([('/?', BlogFront),
@@ -515,8 +490,11 @@ app = webapp2.WSGIApplication([('/?', BlogFront),
                                ('/logout', Logout),
                                ('/register', Register),
                                ('/blog/([0-9]+)', PostPage),
+                               #    ('/blog/likehandler/([0-9]+)', LikeHandler),
                                ('/blog/deletepost/([0-9]+)', DeletePost),
                                ('/blog/editpost/([0-9]+)', EditPost),
+                               #    ('/blog/addcomment/([0-9]+)',
+                               #     AddCommentHandler),
                                ('/blog/deletecomment/([0-9]+)/([0-9]+)',
                                 DeleteComment),
                                ('/blog/editcomment/([0-9]+)/([0-9]+)',
