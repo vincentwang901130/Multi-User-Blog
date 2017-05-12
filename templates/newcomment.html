@@ -1,0 +1,19 @@
+{% extends "base.html" %} {% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <form method="post" autocomplete="off" class="comment-form">
+      <div class="form-group">
+        <label for="comment" class="usertag">Comment:</label>
+        <textarea type="text" class="form-control" name="comment" value=""></textarea>
+      </div>
+      {% if error %}
+      <div class="alert alert-danger" role="alert">
+        {{error}}
+      </div>
+      {% endif %}
+      <button type="submit" class="optbutton btn">Submit</button><button class="optbutton btn" href="/blog/post_id">Cancel</button>
+    </form>
+    <br>
+  </div>
+</div>
+{% endblock %}

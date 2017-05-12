@@ -27,21 +27,8 @@
 
   <div class="row">
     <div class="sub-work col-md-12">
-      <form method="post" role="form">
-        <input type="hidden" class="form-control" id="like" name="like" value="update">
-        <button type="submit" class="functionbtn btn">Like {{noOfLikes}}</button>
-      </form>
-    </div>
-
-    <div class="sub-work col-md-12">
-      <form method="post" role="form" class="comment-form">
-        <div class="form-group">
-          <label for="comment">Comment:</label>
-          <textarea type="text" class="form-control" id="comment" name="comment" value="" rows="2"></textarea>
-        </div>
-        <button type="submit" class="btn">Submit</button>
-      </form>
-      <br>
+        <a class="functionbtn btn" href="/blog/like/{{post.key().id()}}">Like {{post.likes}}</a>
+        <a class="functionbtn btn" href="/blog/addcomment/{{post.key().id()}}">Write A Comment</a>
     </div>
 
     <div class="sub-work col-md-12">

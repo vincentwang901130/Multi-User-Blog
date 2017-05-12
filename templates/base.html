@@ -39,7 +39,7 @@
             <a class="btn" href="/logout" onclick="javascript:return logout()">Logout</a>
           {% elif user and path == '/blog/newpost' %}
             <a class="btn" href="/logout" onclick="javascript:return logout()">Logout</a>
-            <h2>New Post</h2><a class="btn" href="/">Cancel</a>
+            <h2>New Post</h2>
           {% elif not user and path != '/login' and path !='/register'%}
             <a class="btn" href="/login">Login</a>
             <a class="btn" href="/register">Register</a>
@@ -49,7 +49,7 @@
           {% elif not user and path == '/register'%}
             <h2>Register</h2>
             <a class="btn" href="/login">Login</a>
-1          {% endif %}
+          {% endif %}
         </div>
       </header>
       <section class="postblock">
