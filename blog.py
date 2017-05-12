@@ -441,7 +441,7 @@ class DeleteComment(BlogHandler):
             key = db.Key.from_path('Comment', int(
                 comment_id), parent=blog_key())
             cmt = db.get(key)
-            if cmt.user_id and cmt.user_id == self.user.key().id():
+            if cmt and cmt.user_id == self.user.key().id():
                 cmt.delete()
                 self.redirect("/blog/" + post_id)
                 return
