@@ -7,7 +7,7 @@
 }
 
 .welcomebanner h1 {
-  font-size: 50px;
+  font-size: 60px;
 }
 
 .userbar {
@@ -15,23 +15,36 @@
 }
 
 .userbar a {
+  color: #000000;
+  margin-top: 10px;
+  background-color: #e6e6e6;
   font-size: 25px;
 }
 
+.tampstamp {
+  font-size: 20px;
+}
+
 .post-title {
-  font-size: 30px;
+  font-size: 40px;
 }
 
 .post-content {
-  font-size: 20px;
+  font-size: 35px;
 }
 
 .opt a {
-  font-size: 20px;
+  color: #000000;
+  background-color: #e6e6e6;
+  margin-right: 10px;
+  font-size: 16px;
 }
 
 .commentopt a {
-  font-size: 18px;
+  color: #000000;
+  background-color: #e6e6e6;
+  margin-right: 10px;
+  font-size: 16px;
 }
 
 .optbutton {

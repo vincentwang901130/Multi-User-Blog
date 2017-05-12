@@ -318,39 +318,43 @@ class EditPost(BlogHandler):
                 self.render("editpost.html", subject=post.subject,
                             content=post.content)
             else:
-                self.redirect("/blog/" + post_id + "?error=Only owner of " +
-                              "this post can edit this post.")
+                self.redirect("/blog/" + post_id + "?error=Only owner of "
+                              "this post can edit this post")
                 return
         else:
             self.redirect("/login?error=Please login to edit")
             return
 
     def post(self, post_id):
-        if not self.user:
+        if self.user:
+            key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+            post = db.get(key)
+        else:
             self.redirect("/login?error=Please login to edit")
             return
-        if post.user_id == self.user.key().id():
-            subject = self.request.get('subject')
-            content = self.request.get('content')
-            if subject and content:
-                key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-                post = db.get(key)
-                if post is not None:
+        if post is not None:
+            if post.user_id == self.user.key().id():
+                subject = self.request.get('subject')
+                content = self.request.get('content')
+                if subject and content:
+                    key = db.Key.from_path(
+                        'Post', int(post_id), parent=blog_key())
+                    post = db.get(key)
                     post.subject = subject
                     post.content = content
                     post.put()
                     self.redirect('/blog/%s' % post_id)
                     return
                 else:
-                    self.redirect('/')
-                    return
+                    error = "Subject and content can not be empty!"
+                    self.render("editpost.html", subject=subject,
+                                content=content, error=error)
             else:
-                error = "Subject and content can not be empty!"
-                self.render("editpost.html", subject=subject,
-                            content=content, error=error)
+                self.redirect("/blog/" + post_id + "?error=Only owner of "
+                              "this post can edit this post")
+                return
         else:
-            self.redirect("/blog/" + post_id + "?error=Only owner of " +
-                          "this post can edit this post.")
+            self.redirect('/')
             return
 
 
@@ -359,18 +363,23 @@ class DeletePost(BlogHandler):
         if self.user:
             key = db.Key.from_path('Post', int(post_id), parent=blog_key())
             post = db.get(key)
-            if post.user_id == self.user.key().id():
-                post.delete()
-                post.deletecomment(post_id)
-                post.deletelike(post_id)
-                self.redirect("/?deleted_post_id=" + post_id)
-                return
+            if post:
+                if post.user_id == self.user.key().id():
+                    post.delete()
+                    post.deletecomment(post_id)
+                    post.deletelike(post_id)
+                    self.redirect("/?deleted_post_id=" + post_id)
+                    return
+                else:
+                    self.redirect("/blog/" + post_id +
+                                  "?error=Only owner of this post can delete")
+                    return
             else:
-                self.redirect("/blog/" + post_id +
-                              "?error=Only owner of this post can delete.")
+                self.redirect('/')
                 return
         else:
-            self.redirect("/login?error=You need to login to edit this post")
+            self.redirect(
+                "/login?error=You need to login to edit this post")
             return
 
 
@@ -380,46 +389,49 @@ class EditComment(BlogHandler):
             key = db.Key.from_path('Comment', int(comment_id),
                                    parent=blog_key())
             cmt = db.get(key)
+            if cmt is None:
+                self.redirect("/blog/" + post_id + "?error=comment does not"
+                              " exist for editing")
+                return
             if cmt.user_id == self.user.key().id():
                 self.render("editcomment.html", comment=cmt.comment)
             else:
                 self.redirect(
                     "/blog/" + post_id + "?error=You need to "
-                    "be the owner of this comment to edit.")
+                    "be the owner of this comment to edit")
                 return
         else:
             self.redirect(
-                "/login?error=You need to login to edit your comment.")
+                "/login?error=You need to login to edit your comment")
             return
 
     def post(self, post_id, comment_id):
-        if not self.user:
+        if self.user:
+            key = db.Key.from_path('Comment', int(comment_id),
+                                   parent=blog_key())
+            cmt = db.get(key)
+        else:
             self.redirect('/blog')
             return
-        comment = self.request.get('comment')
-        if cmt.user_id == self.user.key().id():
-            if comment:
-                key = db.Key.from_path('Comment', int(
-                    comment_id), parent=blog_key())
-                cmt = db.get(key)
-                if cmt is not None:
+        if cmt:
+            if cmt.user_id == self.user.key().id():
+                comment = self.request.get('comment')
+                if comment:
                     cmt.comment = comment
                     cmt.put()
                     self.redirect("/blog/" + post_id)
                     return
                 else:
-                    self.redirect('/')
+                    error = "comment cannot be empty"
+                    self.render("editcomment.html", comment=cmt.comment)
                     return
             else:
-                error = "comment cannot be empty"
-                self.redirect("editpost.html", subject=subject,
-                              content=content,
-                              error=error)
+                self.redirect(
+                    "/blog/" + post_id + "?error=You need to "
+                    "be the owner of this comment to edit")
                 return
         else:
-            self.redirect(
-                "/blog/" + post_id + "?error=You need to "
-                "be the owner of this comment to edit.")
+            self.redirect('/')
             return
 
 
@@ -436,11 +448,11 @@ class DeleteComment(BlogHandler):
             else:
                 self.redirect(
                     "/blog/" + post_id + "?error=You need to be "
-                    "the owner of this comment to delete.")
+                    "the owner of this comment to delete")
                 return
         else:
             self.redirect("/login?error=You need to "
-                          "login to delete this comment.")
+                          "login to delete this comment")
             return
 
 
